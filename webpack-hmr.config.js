@@ -25,24 +25,5 @@ module.exports = function (options, webpack) {
                 autoRestart: false,
             }),
         ],
-        module: {
-            rules: [
-                {
-                    test: /\.tsx?$/u,
-                    use: { 
-                        loader: 'swc-loader',
-                        options: {
-                            jsc: {
-                                parser: {
-                                    syntax: 'typescript',
-                                    decorators: true,
-                                },
-                            }
-                        }
-                    },
-                    exclude: /(node_modules)/u,
-                },
-            ],
-        },
     };
 };

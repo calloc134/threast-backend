@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  MANAGER
+  SUBADMIN
+  ADMIN
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  screenName     String   @unique
+  userName       String
+  createdAt      DateTime @default(now())
+  createIp       String
+  updatedAt      DateTime @updatedAt
+  lastLoginDate  DateTime
+  lastLoginIp    String
+  lastUpdateDate DateTime
+  password       String
+  comment        String?
+  privateComment String?
+
+  // FF
+  followedBy Follow[] @relation("following")
+  following  Follow[] @relation("follower")
+
+  // Relation
+  // - Post
+  role     Role       @default(USER)
+  posts    Post[]
+  likes    PostLike[]
+  comments Comment[]
+
+  // - Message
+  chatrooms ChatRoom[]
+  messages  Message[]
+}
+
+model Follow {
+  id          Int  @id @default(autoincrement())
+  follower    User @relation("follower", fields: [followerId], references: [id])
+  followerId  Int
+  following   User @relation("following", fields: [followingId], references: [id])
+  followingId Int
+
+  @@unique([followerId, followingId])
+}
+
+model Post {
+  id    Int     @id @default(autoincrement())
+  title String
+  body  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Author   User @relation(fields: [authorId], references: [id])
+  authorId Int
+
+  hashTags HashTag[]
+
+  liked    PostLike[]
+  comments Comment[]
+
+  @@unique([title, body])
+}
+
+model HashTag {
+  id      Int     @id @default(autoincrement())
+  name    String  @unique
+  comment String?
+
+  posts Post[]
+}
+
+model PostLike {
+  id Int @id @default(autoincrement())
+
+  User   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  Post   Post @relation(fields: [postId], references: [id])
+  postId Int
+
+  @@unique([userId, postId])
+}
+
+model Comment {
+  id   Int    @id @default(autoincrement())
+  text String
+
+  User   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  Post   Post @relation(fields: [postId], references: [id])
+  postId Int
+}
+
+model ChatRoom {
+  id        Int      @id @default(autoincrement())
+  name      String
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+
+  messages Message[]
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sender    User     @relation(fields: [senderId], references: [id])
+  senderId  Int
+
+  ChatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
+  chatRoomId Int
+}
